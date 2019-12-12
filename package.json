@@ -11,5 +11,8 @@
   "scripts": {
     "start": "node ."
   },
+  "bin": {
+    "deploy-contract": "./cli.js"
+  },
   "devDependencies": {}
 }

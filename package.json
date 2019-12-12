@@ -1,0 +1,15 @@
+{
+  "name": "contract-deployer",
+  "version": "0.0.1",
+  "description": "Automated Wavelet smart contract deployment script",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "wasm-pack-npm": "^0.1.3",
+    "wavelet-client": "^2.0.0-rc.5"
+  },
+  "scripts": {
+    "start": "node ."
+  },
+  "devDependencies": {}
+}

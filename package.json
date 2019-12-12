@@ -12,7 +12,7 @@
     "start": "node ."
   },
   "bin": {
-    "deploy-contract": "./cli.js"
+    "contract-deployer": "./cli.js"
   },
   "devDependencies": {}
 }

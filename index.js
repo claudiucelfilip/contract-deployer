@@ -26,7 +26,7 @@ module.exports = async (
     `cd ${path.resolve(
       // __dirname,
       cargoPath
-    )} && wasm-pack build`
+    )} && cargo build --release --target wasm32-unknown-unknown`
   );
   console.log("Contract build: \n", buildResponse.stdout, buildResponse.stderr);
 
@@ -36,7 +36,7 @@ module.exports = async (
     `ls ${path.resolve(
       // __dirname,
       cargoPath,
-      "pkg/*.wasm"
+      "target/wasm32-unknown-unknown/release/*.wasm"
     )}`
   );
   console.log("Contract folder: \n", wasmResponse.stdout, wasmResponse.stderr);

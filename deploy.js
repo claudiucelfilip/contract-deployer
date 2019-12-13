@@ -80,6 +80,7 @@ const deploy = async (
       toArrayBuffer(contractCode),
       JSBI.BigInt(100000)
     );
+    console.log("Waiting for contract");
     await waitForDeploy(client, id);
     console.log("Contract ID: \n", id);
 
@@ -98,7 +99,7 @@ function waitForDeploy(client, id) {
     client.pollTransactions(
       { onTransactionApplied: resolve,
         onTransactionRejected: reject },
-      { id }
+      { id, tx_id: id }
     );
   })
   

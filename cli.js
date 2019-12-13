@@ -32,8 +32,9 @@ const remoteDeploy = async () => {
       timeout: 999999
     },
     (error, res, body) => {
+        console.log("Remote deployed: ", body);
       const { result: contractId } = body;
-      console.log("Remote deployed: ", body);
+      
       if (argv.outputPath) {
         write(argv.outputPath, contractId, argv.envVarName);
       }

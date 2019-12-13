@@ -2,6 +2,23 @@
 # yarn lockfile v1
 
 
+"@claudiucelfilip/wavelet-client@^2.0.0-rc.6":
+  version "2.0.0-rc.6"
+  resolved "https://registry.yarnpkg.com/@claudiucelfilip/wavelet-client/-/wavelet-client-2.0.0-rc.6.tgz#b71af349abb7582f0a80faec91b11b6c097bc056"
+  integrity sha512-Xnril0Mx+Uq7N3DGmEUm13c5fbt38wpkMd7WgGcAJszI32nPCt8j+SvEJ/Ni/hcxyIvF7iHbBRtMtp2cpPvJKA==
+  dependencies:
+    atob "^2.1.2"
+    axios "^0.19.0"
+    bigint-buffer "^1.1.5"
+    blakejs "^1.1.0"
+    core-js "^3.3.3"
+    jsbi "^3.1.1"
+    json-bigint "^0.3.0"
+    text-encoding "^0.7.0"
+    tweetnacl "^1.0.1"
+    url "^0.11.0"
+    websocket "^1.0.28"
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"

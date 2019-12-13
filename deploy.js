@@ -2,7 +2,7 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const readFile = util.promisify(require("fs").readFile);
 const writeFile = util.promisify(require("fs").writeFile);
-const { Wavelet, JSBI } = require("wavelet-client");
+const { Wavelet, JSBI } = require("@claudiucelfilip/wavelet-client");
 const path = require("path");
 
 const DEFAULT_HOST = process.env.WAVELET_API_URL || "https://devnet.perlin.net";

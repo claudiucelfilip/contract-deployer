@@ -95,7 +95,7 @@ const deploy = async (
 
 function waitForDeploy(id) {
   return new Promise((resolve, reject) => {
-    await client.pollTransactions(
+    client.pollTransactions(
       { onTransactionApplied: resolve,
         onTransactionRejected: reject },
       { id }

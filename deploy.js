@@ -109,7 +109,7 @@ const write = async (outputPath, contractId, envVarName = "CONTRACT_ID") => {
     throw new Error("You must specify an contractId");
   }
 
-  await writeFile(outputPath, `${envVarName} ${contractId}`);
+  await writeFile(outputPath, `${envVarName}=${contractId}`);
   console.log("Wrote to ", outputPath);
 };
 module.exports = {

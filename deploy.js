@@ -23,18 +23,32 @@ const deploy = async (
   }
   const client = new Wavelet(waveletUrl);
   const wallet = Wavelet.loadWalletFromPrivateKey(privateKey);
-  const repoRoot = "cargo-" + Date.now();
+  // const repoRoot = "cargo" + Date.now();
 
   if (repo) {
-    const cloneResponse = await exec(`
-      git clone ${repo} ${repoRoot}
-    `);
+    const repoRoot = repo.replace(/.*\//, "");
     cargoPath = path.resolve(repoRoot, cargoPath);
-    console.log(
-      "Contract cloned: \n",
-      cloneResponse.stdout,
-      cloneResponse.stderr
-    );
+    try {
+      const cloneResponse = await exec(`
+        git clone ${repo} ${repoRoot}
+      `);
+
+      console.log(
+        "Contract cloned: \n",
+        cloneResponse.stdout,
+        cloneResponse.stderr
+      );
+    } catch (err) {
+      console.log("Clone error", err.message);
+      const pullResponse = await exec(`
+        cd ${repoRoot} && git pull
+      `);
+      console.log(
+        "Contract pulled: \n",
+        pullResponse.stdout,
+        pullResponse.stderr
+      );
+    }
     console.log("........................................");
   }
 
@@ -51,10 +65,7 @@ const deploy = async (
   console.log("........................................");
 
   const wasmResponse = await exec(
-    `ls ${path.resolve(
-      cargoPath,
-      "pkg/*.wasm"
-    )}`
+    `ls ${path.resolve(cargoPath, "pkg/*.wasm")}`
   );
   console.log("Contract file: \n", wasmResponse.stdout, wasmResponse.stderr);
   console.log("........................................");
@@ -74,14 +85,7 @@ const deploy = async (
     if (outputPath) {
       write(outputPath, id, envVarName);
     }
-    if (repo) {
-      (async () => {
-        const removeResponse = await exec(
-          `rm -rf ${path.resolve(repoRoot)}`
-        );
-        console.log(`Repo removed: ${repoRoot} \n`, removeResponse.stdout, removeResponse.stderr);
-      })(); 
-    }
+
     return id;
   } catch (err) {
     console.error(err);
@@ -97,7 +101,7 @@ function toArrayBuffer(buffer) {
   return ab;
 }
 
-const write = async (outputPath, contractId, envVarName= "CONTRACT_ID") => {
+const write = async (outputPath, contractId, envVarName = "CONTRACT_ID") => {
   if (!outputPath) {
     throw new Error("You must specify an outputPath");
   }
@@ -110,5 +114,5 @@ const write = async (outputPath, contractId, envVarName= "CONTRACT_ID") => {
 };
 module.exports = {
   deploy,
-  write
+  write,
 };

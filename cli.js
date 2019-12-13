@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const { deploy, write } = require("./deploy");
 const { argv } = require("yargs");
-const axios = require("axios");
+const request = require("request");
 
 let repo = "";
 
@@ -22,15 +22,23 @@ const remoteDeploy = async () => {
   if (!argv.repo) {
     throw new Error("Repo is needed for remote deploys");
   }
-  const { data } = await axios.post(argv.remote + "/deploy-contract", {
-    cargoPath: argv.cargoPath,
-    repo,
-  });
-  const { result: contractId } = data;
-  console.log("Remote deployed: ", contractId);
-  if (argv.outputPath) {
-    write(argv.outputPath, contractId, argv.envVarName);
-  }
+  request.post(
+    argv.remote + "/deploy-contract",
+    {
+      json: {
+        cargoPath: argv.cargoPath,
+        repo,
+      },
+      timeout: 999999
+    },
+    (error, res, body) => {
+      const { result: contractId } = body;
+      console.log("Remote deployed: ", body);
+      if (argv.outputPath) {
+        write(argv.outputPath, contractId, argv.envVarName);
+      }
+    }
+  );
 };
 
 if (argv.remote) {

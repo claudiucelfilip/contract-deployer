@@ -80,6 +80,7 @@ const deploy = async (
       toArrayBuffer(contractCode),
       JSBI.BigInt(100000)
     );
+    await waitForDeploy(id);
     console.log("Contract ID: \n", id);
 
     if (outputPath) {
@@ -92,6 +93,16 @@ const deploy = async (
   }
 };
 
+function waitForDeploy(id) {
+  return new Promise((resolve, reject) => {
+    await client.pollTransactions(
+      { onTransactionApplied: resolve,
+        onTransactionRejected: reject },
+      { id }
+    );
+  })
+  
+}
 function toArrayBuffer(buffer) {
   var ab = new ArrayBuffer(buffer.length);
   var view = new Uint8Array(ab);

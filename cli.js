@@ -72,6 +72,10 @@ const remoteDeploy = async () => {
 
     postDeploy(contractId);
   });
+  socket.on("error", (err) => {
+    console.error(err);
+    socket.close();
+  });
 };
 
 if (argv.remote) {

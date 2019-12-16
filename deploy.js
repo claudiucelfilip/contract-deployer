@@ -26,11 +26,14 @@ const deploy = async (
   // const repoRoot = "cargo" + Date.now();
 
   if (repo) {
-    const repoRoot = repo.replace(/.*\//, "");
+    const repoSufix = repo.replace(/.*\//, "");
+    const [repoRoot, branch = "master"] = repoSufix.split("#");
     cargoPath = path.resolve(repoRoot, cargoPath);
+    const repoPath = repo.replace(/#.*/, "");
     try {
+      console.log("CLONE", `git clone -branch ${branch} ${repoPath} ${repoRoot}`);
       const cloneResponse = await exec(`
-        git clone ${repo} ${repoRoot}
+        git clone ${repoPath} ${repoRoot} && cd ${repoRoot} && git checkout ${branch}
       `);
 
       console.log(

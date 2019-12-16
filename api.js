@@ -8,13 +8,13 @@ const socketServer = require("socket.io");
 
 module.exports = (...args) => {
   app.use(bodyParser.json());
-  app.post("/deploy-contract", async (req, res) => {
-    body = req.body;
-    const contractId = await deploy(body.cargoPath, null, body.repo);
-    res.send({
-      result: contractId,
-    });
-  });
+  // app.post("/deploy-contract", async (req, res) => {
+  //   body = req.body;
+  //   const contractId = await deploy(body.cargoPath, null, body.repo);
+  //   res.send({
+  //     result: contractId,
+  //   });
+  // });
   // parse application/x-www-form-urlencoded
   app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -26,8 +26,10 @@ module.exports = (...args) => {
 
   io.on("connection", socket => {
     console.log("a user connected");
+
     socket.on("deploy-contract", async body => {
       console.log("deploy-contract", body);
+
       const contractId = await deploy(body.cargoPath, null, body.repo);
       socket.emit("deployed-contract", {
         result: contractId,

@@ -1,14 +1,19 @@
 #!/usr/bin/env node
+const util = require("util");
 const { deploy, write } = require("./deploy");
 const { argv } = require("yargs");
-const request = require("request");
 const socketClient = require("socket.io-client");
+const readFile = util.promisify(require("fs").readFile);
+const writeFile = util.promisify(require("fs").writeFile);
 
 let repo = "";
+let template = "";
+const envVarName = argv.envVarName || "CONTRACT_ID";
 
 if (argv.repo) {
   repo = argv.repo.replace(/^(?!https:\/\/github.com)/g, "https://github.com/");
 }
+
 console.log(repo);
 
 const localDeploy = () => {
@@ -18,6 +23,10 @@ const localDeploy = () => {
 };
 
 const remoteDeploy = async () => {
+  if (argv.outputTemplate) {
+    template = await readFile(argv.outputTemplate, "utf8");
+    console.log(template);
+  }
   console.log("Starting remote deploy");
 
   if (!argv.repo) {
@@ -30,11 +39,15 @@ const remoteDeploy = async () => {
     repo,
   });
 
-  socket.on("deployed-contract", body => {
+  socket.on("deployed-contract", async body => {
     const { result: contractId } = body;
 
-    if (argv.outputPath) {
-      write(argv.outputPath, contractId, argv.envVarName);
+    if (template) {
+      const regexp = new RegExp(`{{${envVarName}}}`, "g");
+      const output = template.replace(regexp, contractId);
+      const outputPath = argv.outputTemplate.replace(/\.template/, "");
+      await writeFile(outputPath, output);
+      console.log("wrote to", outputPath);
     }
     socket.close();
   });

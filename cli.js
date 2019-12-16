@@ -2,6 +2,7 @@
 const util = require("util");
 const { deploy, write } = require("./deploy");
 const { argv } = require("yargs");
+const exec = util.promisify(require("child_process").exec);
 const socketClient = require("socket.io-client");
 const readFile = util.promisify(require("fs").readFile);
 const writeFile = util.promisify(require("fs").writeFile);
@@ -50,6 +51,19 @@ const remoteDeploy = async () => {
       console.log("wrote to", outputPath);
     }
     socket.close();
+
+    if (argv.postDeploy) {
+      console.log("Processing post deploy command:", argv.postDeploy);
+      const postDeployResponse = await exec(argv.postDeploy, {
+        ...process.env,
+        [envVarName]: contractId
+      });
+      console.log(
+        "Post deploy: \n",
+        postDeployResponse.stdout,
+        postDeployResponse.stderr
+      );
+    }
   });
 };
 

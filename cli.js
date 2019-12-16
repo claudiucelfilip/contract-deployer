@@ -2,6 +2,7 @@
 const { deploy, write } = require("./deploy");
 const { argv } = require("yargs");
 const request = require("request");
+const socketClient = require("socket.io-client");
 
 let repo = "";
 
@@ -22,24 +23,21 @@ const remoteDeploy = async () => {
   if (!argv.repo) {
     throw new Error("Repo is needed for remote deploys");
   }
-  request.post(
-    argv.remote + "/deploy-contract",
-    {
-      json: {
-        cargoPath: argv.cargoPath,
-        repo,
-      },
-      timeout: 999999
-    },
-    (error, res, body) => {
-        console.log("Remote deployed: ", body);
-      const { result: contractId } = body;
-      
-      if (argv.outputPath) {
-        write(argv.outputPath, contractId, argv.envVarName);
-      }
+  const socket = socketClient(argv.remote);
+  console.log("connect socket");
+  socket.emit("deploy-contract", {
+    cargoPath: argv.cargoPath,
+    repo,
+  });
+
+  socket.on("deployed-contract", body => {
+    const { result: contractId } = body;
+
+    if (argv.outputPath) {
+      write(argv.outputPath, contractId, argv.envVarName);
     }
-  );
+    socket.close();
+  });
 };
 
 if (argv.remote) {

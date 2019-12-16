@@ -17,10 +17,28 @@ if (argv.repo) {
 
 console.log(repo);
 
-const localDeploy = () => {
+const postDeploy = (contractId) => {
+  if (argv.postDeploy) {
+    console.log("Processing post deploy command:", argv.postDeploy);
+    console.log("Using", envVarName, contractId);
+    const env = {
+      ...process.env,
+      [envVarName]: contractId,
+    };
+    console.log("env", env);
+    const postDeployResponse = exec(argv.postDeploy, {
+      env
+    });
+
+    postDeployResponse.stdout.pipe(process.stdout);
+    postDeployResponse.stderr.pipe(process.stderr);
+  }
+}
+const localDeploy = async () => {
   console.log("Starting local deploy");
 
-  deploy(argv.cargoPath, argv.outputPath, repo);
+  const contractId =  await deploy(argv.cargoPath, argv.outputPath, repo);
+  postDeploy(contractId);
 };
 
 const remoteDeploy = async () => {
@@ -52,19 +70,7 @@ const remoteDeploy = async () => {
     }
     socket.close();
 
-    if (argv.postDeploy) {
-      console.log("Processing post deploy command:", argv.postDeploy);
-      console.log("Using", envVarName, contractId);
-      const postDeployResponse = exec(argv.postDeploy, {
-        env: {
-          ...process.env,
-          [envVarName]: contractId,
-        },
-      });
-
-      postDeployResponse.stdout.pipe(process.stdout);
-      postDeployResponse.stderr.pipe(process.stderr);
-    }
+    postDeploy(contractId);
   });
 };
 

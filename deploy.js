@@ -5,7 +5,7 @@ const writeFile = util.promisify(require("fs").writeFile);
 const { Wavelet, JSBI } = require("@claudiucelfilip/wavelet-client");
 const path = require("path");
 
-const DEFAULT_HOST = process.env.WAVELET_API_URL || "http://f6d17235.ngrok.io";
+const DEFAULT_HOST = process.env.WAVELET_API_URL || "https://f6d17235.ngrok.io";
 const DEFAULT_PRIVATE_KEY =
   process.env.DEFAULT_PRIVATE_KEY ||
   "85e7450f7cf0d9cd1d1d7bf4169c2f364eea4ba833a7280e0f931a1d92fd92c2696937c2c8df35dba0169de72990b80761e51dd9e2411fa1fce147f68ade830a";

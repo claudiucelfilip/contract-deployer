@@ -21,14 +21,17 @@ const postDeploy = (contractId, waveletApiUrl) => {
   if (argv.postDeploy) {
     console.log("Processing post deploy command:", argv.postDeploy);
     console.log("Using", envVarName, contractId);
-    const env = {
-      ...process.env,
+    const deployEnv = {
       [envVarName]: contractId,
       ["REACT_APP_" + envVarName]: contractId,
       WAVELET_API_URL: process.env.WAVELET_API_URL || waveletApiUrl,
       REACT_APP_WAVELET_API_URL: process.env.WAVELET_API_URL || waveletApiUrl,
     };
-    
+    const env = {
+      ...process.env,
+      ...deployEnv
+    };
+    console.log("new env:", deployEnv);
     const postDeployProcess = exec(argv.postDeploy, {
       env,
     });

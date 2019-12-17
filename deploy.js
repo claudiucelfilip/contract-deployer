@@ -77,6 +77,8 @@ const deploy = async (
       logHandle(...args);
     }
   };
+
+  log("Deploying to ", waveletApiUrl);
   if (!cargoPath) {
     throw new Error("You must specify a path to smart contract project");
   }

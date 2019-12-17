@@ -100,7 +100,7 @@ const deploy = async (
     if (deployedId) {
       const { id } = await client.getTransaction(deployedId);
       log("Contract already deployed under", id);
-      return { contractId: id, waveletApiUrl: DEFAULT_HOST };
+      return { contractId: id, waveletApiUrl };
     }
   } catch (_) {}
 
@@ -118,14 +118,14 @@ const deploy = async (
   log("Contract ID: \n", id);
 
   if (outputPath) {
-    write(outputPath, id, envVarName);
+    write(outputPath, id, waveletApiUrl, envVarName);
   }
 
   if (isRemote) {
     writeFile(artifactPath, id);
   }
 
-  return { contractId: id, waveletApiUrl: DEFAULT_HOST };
+  return { contractId: id, waveletApiUrl };
 };
 
 function waitForDeploy(client, id) {
@@ -145,7 +145,7 @@ function toArrayBuffer(buffer) {
   return ab;
 }
 
-const write = async (outputPath, contractId, envVarName = "CONTRACT_ID") => {
+const write = async (outputPath, contractId, waveletApiUrl, envVarName = "CONTRACT_ID") => {
   if (!outputPath) {
     throw new Error("You must specify an outputPath");
   }
@@ -153,7 +153,12 @@ const write = async (outputPath, contractId, envVarName = "CONTRACT_ID") => {
     throw new Error("You must specify an contractId");
   }
 
-  await writeFile(outputPath, `${envVarName}=${contractId}`);
+  await writeFile(outputPath, `
+    ${envVarName}=${contractId}
+    REACT_APP_${envVarName}=${contractId}
+    WAVELET_API_URL=${waveletApiUrl}
+    REACT_APP_WAVELET_API_URL=${waveletApiUrl}   
+  `);
   log("Wrote to ", outputPath);
 };
 module.exports = {

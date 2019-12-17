@@ -77,6 +77,7 @@ const deploy = async (
   cargoPath,
   outputPath = "",
   repo = "",
+  deposit = 0,
   waveletUrl = DEFAULT_HOST,
   privateKey = DEFAULT_PRIVATE_KEY,
   envVarName = ""
@@ -113,7 +114,8 @@ const deploy = async (
   const { id } = await client.deployContract(
     wallet,
     toArrayBuffer(contractCode),
-    JSBI.BigInt(100000)
+    100000000,
+    deposit
   );
   console.log("Waiting for contract");
   await waitForDeploy(client, id);

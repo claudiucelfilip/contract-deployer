@@ -37,7 +37,7 @@ const postDeploy = contractId => {
 const localDeploy = async () => {
   console.log("Starting local deploy");
 
-  const contractId = await deploy(argv.cargoPath, argv.outputPath, repo);
+  const contractId = await deploy(argv.cargoPath, argv.outputPath, repo, argv.deposit);
   postDeploy(contractId);
 };
 
@@ -56,6 +56,7 @@ const remoteDeploy = async () => {
   socket.emit("deploy-contract", {
     cargoPath: argv.cargoPath,
     repo,
+    deposit: argv.deposit
   });
 
   socket.on("deployed-contract", async body => {

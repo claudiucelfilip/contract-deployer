@@ -3,7 +3,6 @@ const app = express();
 const port = process.env.PORT || 3011;
 const bodyParser = require("body-parser");
 const { deploy } = require("./deploy");
-const http = require("http");
 const socketServer = require("socket.io");
 
 module.exports = (...args) => {
@@ -18,7 +17,7 @@ module.exports = (...args) => {
     socket.on("deploy-contract", async body => {
       console.log("deploy-contract", body);
 
-      const contractId = await deploy(body.cargoPath, null, body.repo);
+      const contractId = await deploy(body.cargoPath, null, body.repo, body.deposit);
       socket.emit("deployed-contract", {
         result: contractId,
       });

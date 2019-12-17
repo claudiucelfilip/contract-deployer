@@ -19,21 +19,13 @@ const cloneRepo = async (repo, repoRoot, branch, log) => {
       cd contracts && git clone ${repoPath} ${repoRoot} && cd ${repoRoot} && git checkout ${branch}
     `);
 
-    log(
-      "Contract cloned: \n",
-      cloneResponse.stdout,
-      cloneResponse.stderr
-    );
+    log("Contract cloned: \n", cloneResponse.stdout, cloneResponse.stderr);
   } catch (err) {
     log("Couldn't clone. Project already there, proably.", err.message);
     const pullResponse = await exec(`
       cd contracts/${repoRoot} && git pull
     `);
-    log(
-      "Contract pulled: \n",
-      pullResponse.stdout,
-      pullResponse.stderr
-    );
+    log("Contract pulled: \n", pullResponse.stdout, pullResponse.stderr);
     if (pullResponse.stdout.includes("Already up to date.")) {
       return false;
     }
@@ -67,7 +59,6 @@ const build = async (contractsRoot, cargoPath, log) => {
   return await readFile(wasmPath);
 };
 
-
 const deploy = async (
   cargoPath,
   outputPath = "",
@@ -75,20 +66,22 @@ const deploy = async (
   deposit = 0,
   envVarName = "CONTRACT_ID",
   logHandle,
-  isRemote =  false
+  isRemote = false,
+  waveletApiUrl = DEFAULT_HOST,
+  privateKey = DEFAULT_PRIVATE_KEY
 ) => {
-  const contractsRoot = isRemote ? "contracts": ".";
+  const contractsRoot = isRemote ? "contracts" : ".";
   const log = (...args) => {
     console.log(...args);
     if (logHandle) {
       logHandle(...args);
     }
-  }
+  };
   if (!cargoPath) {
     throw new Error("You must specify a path to smart contract project");
   }
-  const client = new Wavelet(DEFAULT_HOST);
-  const wallet = Wavelet.loadWalletFromPrivateKey(DEFAULT_PRIVATE_KEY);
+  const client = new Wavelet(waveletApiUrl);
+  const wallet = Wavelet.loadWalletFromPrivateKey(privateKey);
   let codeChanged = false;
 
   const repoSufix = repo.replace(/.*\//, "");
@@ -107,7 +100,7 @@ const deploy = async (
     if (deployedId) {
       const { id } = await client.getTransaction(deployedId);
       log("Contract already deployed under", id);
-      return id;
+      return { contractId: id, waveletApiUrl: DEFAULT_HOST };
     }
   } catch (_) {}
 
@@ -119,6 +112,7 @@ const deploy = async (
     100000000,
     deposit
   );
+
   log("Waiting for contract");
   await waitForDeploy(client, id);
   log("Contract ID: \n", id);
@@ -131,7 +125,7 @@ const deploy = async (
     writeFile(artifactPath, id);
   }
 
-  return id;
+  return { contractId: id, waveletApiUrl: DEFAULT_HOST };
 };
 
 function waitForDeploy(client, id) {

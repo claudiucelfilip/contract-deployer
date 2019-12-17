@@ -20,10 +20,15 @@ module.exports = (...args) => {
     socket.on("deploy-contract", async body => {
       console.log("deploy-contract", body);
 
-      const contractId = await deploy(null, body.repo, body.deposit, body.envVarName, logHandler, true);
-      socket.emit("deployed-contract", {
-        result: contractId,
-      });
+      try {
+        const result = await deploy(body.cargoPath, null, body.repo, body.deposit, body.envVarName, logHandler, true, body.waveletApiUrl, body.privateKey);
+        socket.emit("deployed-contract", result);
+      } catch (err) {
+        console.error(err.message);
+        socket.emit("deployment-failed", err);
+      }
+      
+      
     });
   });
 

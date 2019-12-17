@@ -17,13 +17,14 @@ if (argv.repo) {
 
 console.log(repo);
 
-const postDeploy = contractId => {
+const postDeploy = (contractId, waveletApiUrl) => {
   if (argv.postDeploy) {
     console.log("Processing post deploy command:", argv.postDeploy);
     console.log("Using", envVarName, contractId);
     const env = {
       ...process.env,
       [envVarName]: contractId,
+      WAVELET_API_URL: process.env.WAVELET_API_URL || waveletApiUrl,
     };
     console.log("env", env);
     const postDeployProcess = exec(argv.postDeploy, {
@@ -37,13 +38,13 @@ const postDeploy = contractId => {
 const localDeploy = async () => {
   console.log("Starting local deploy");
 
-  const contractId = await deploy(
+  const { contractId, waveletApiUrl } = await deploy(
     argv.cargoPath,
     argv.outputPath,
     repo,
     argv.deposit
   );
-  postDeploy(contractId);
+  postDeploy(contractId, waveletApiUrl);
 };
 
 const remoteDeploy = async () => {
@@ -57,30 +58,38 @@ const remoteDeploy = async () => {
     throw new Error("Repo is needed for remote deploys");
   }
   const socket = socketClient(argv.remote);
-  console.log("connect socket");
   socket.emit("deploy-contract", {
     cargoPath: argv.cargoPath,
     repo,
     deposit: argv.deposit,
-    envVarName
+    envVarName,
+    waveletApiUrl: process.env.WAVELET_API_URL,
+    privateKey: process.env.DEFAULT_PRIVATE_KEY
   });
 
   socket.on("log", args => {
     console.log(...args);
   });
   socket.on("deployed-contract", async body => {
-    const { result: contractId } = body;
+    const { contractId, waveletApiUrl } = body;
 
     if (template) {
       const regexp = new RegExp(`{{${envVarName}}}`, "g");
-      const output = template.replace(regexp, contractId);
+      let output = template
+        .replace(regexp, contractId)
+        .replace(/{{WAVELET_API_URL}}/, waveletApiUrl);
       const outputPath = argv.outputTemplate.replace(/\.template/, "");
       await writeFile(outputPath, output);
       console.log("wrote to", outputPath);
     }
     socket.close();
 
-    postDeploy(contractId);
+    postDeploy(contractId, waveletApiUrl);
+  });
+
+  socket.on("deployment-failed", err => {
+    console.error(err.message);
+    socket.close();
   });
   socket.on("error", err => {
     console.error(err);

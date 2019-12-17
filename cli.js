@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const util = require("util");
-const { deploy, write } = require("./deploy");
+const { deploy } = require("./deploy");
 const { argv } = require("yargs");
 const exec = require("child_process").exec;
 const socketClient = require("socket.io-client");
@@ -17,7 +17,7 @@ if (argv.repo) {
 
 console.log(repo);
 
-const postDeploy = (contractId) => {
+const postDeploy = contractId => {
   if (argv.postDeploy) {
     console.log("Processing post deploy command:", argv.postDeploy);
     console.log("Using", envVarName, contractId);
@@ -26,18 +26,18 @@ const postDeploy = (contractId) => {
       [envVarName]: contractId,
     };
     console.log("env", env);
-    const postDeployResponse = exec(argv.postDeploy, {
-      env
+    const postDeployProcess = exec(argv.postDeploy, {
+      env,
     });
 
-    postDeployResponse.stdout.pipe(process.stdout);
-    postDeployResponse.stderr.pipe(process.stderr);
+    postDeployProcess.stdout.pipe(process.stdout);
+    postDeployProcess.stderr.pipe(process.stderr);
   }
-}
+};
 const localDeploy = async () => {
   console.log("Starting local deploy");
 
-  const contractId =  await deploy(argv.cargoPath, argv.outputPath, repo);
+  const contractId = await deploy(argv.cargoPath, argv.outputPath, repo);
   postDeploy(contractId);
 };
 
@@ -72,8 +72,13 @@ const remoteDeploy = async () => {
 
     postDeploy(contractId);
   });
-  socket.on("error", (err) => {
+  socket.on("error", err => {
     console.error(err);
+    socket.close();
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Connection closed");
     socket.close();
   });
 };

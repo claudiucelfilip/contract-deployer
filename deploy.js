@@ -2,13 +2,13 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const readFile = util.promisify(require("fs").readFile);
 const writeFile = util.promisify(require("fs").writeFile);
-const { Wavelet, JSBI } = require("@claudiucelfilip/wavelet-client");
+const { Wavelet, JSBI } = require("wavelet-client");
 const path = require("path");
 
-const DEFAULT_HOST = process.env.WAVELET_API_URL || "https://f6d17235.ngrok.io";
+const DEFAULT_HOST = process.env.WAVELET_API_URL || "https://devnet.perlin.net";
 const DEFAULT_PRIVATE_KEY =
   process.env.DEFAULT_PRIVATE_KEY ||
-  "85e7450f7cf0d9cd1d1d7bf4169c2f364eea4ba833a7280e0f931a1d92fd92c2696937c2c8df35dba0169de72990b80761e51dd9e2411fa1fce147f68ade830a";
+  "ba3daa36b1612a30fb0f7783f98eb508e8f045ffb042124f86281fb41aee8705e919a3626df31b6114ec79567726e9a31c600a5d192e871de1b862412ae8e4c0";
 
 const deploy = async (
   cargoPath,

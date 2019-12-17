@@ -11,25 +11,25 @@ const DEFAULT_PRIVATE_KEY =
   process.env.DEFAULT_PRIVATE_KEY ||
   "ba3daa36b1612a30fb0f7783f98eb508e8f045ffb042124f86281fb41aee8705e919a3626df31b6114ec79567726e9a31c600a5d192e871de1b862412ae8e4c0";
 
-const cloneRepo = async (repo, repoRoot, branch) => {
+const cloneRepo = async (repo, repoRoot, branch, log) => {
   const repoPath = repo.replace(/#.*/, "");
   try {
-    console.log("CLONE", `git clone -branch ${branch} ${repoPath} ${repoRoot}`);
+    log("CLONE", `git clone -branch ${branch} ${repoPath} ${repoRoot}`);
     const cloneResponse = await exec(`
       cd contracts && git clone ${repoPath} ${repoRoot} && cd ${repoRoot} && git checkout ${branch}
     `);
 
-    console.log(
+    log(
       "Contract cloned: \n",
       cloneResponse.stdout,
       cloneResponse.stderr
     );
   } catch (err) {
-    console.log("Clone error", err.message);
+    log("Couldn't clone. Project already there, proably.", err.message);
     const pullResponse = await exec(`
       cd contracts/${repoRoot} && git pull
     `);
-    console.log(
+    log(
       "Contract pulled: \n",
       pullResponse.stdout,
       pullResponse.stderr
@@ -38,21 +38,17 @@ const cloneRepo = async (repo, repoRoot, branch) => {
       return false;
     }
   }
-  console.log("........................................");
   return true;
 };
 
-const build = async cargoPath => {
+const build = async (contractsRoot, cargoPath, log) => {
   const liveBuild = () => {
     return new Promise(resolve => {
-      console.log("Build started");
+      log("Building contract...");
       const buildProcess = execLive(
-        `wasm-pack -v build ${path.resolve("contracts", cargoPath)}`
+        `wasm-pack build ${path.resolve(contractsRoot, cargoPath)}`
       );
-
-      buildProcess.on("message", (msg) => {
-        console.log(msg);
-      });
+      buildProcess.stdout.on("data", log);
       buildProcess.stdout.pipe(process.stdout);
       buildProcess.stderr.pipe(process.stderr);
       buildProcess.on("close", resolve);
@@ -62,54 +58,60 @@ const build = async cargoPath => {
   await liveBuild();
 
   const wasmResponse = await exec(
-    `ls ${path.resolve("contracts", cargoPath, "pkg/*.wasm")}`
+    `ls ${path.resolve(contractsRoot, cargoPath, "pkg/*.wasm")}`
   );
-  console.log("Contract file: \n", wasmResponse.stdout, wasmResponse.stderr);
-  console.log("........................................");
 
   const wasmPath = wasmResponse.stdout.trim();
-  console.log("........................................");
+  log("........................................");
 
   return await readFile(wasmPath);
 };
+
 
 const deploy = async (
   cargoPath,
   outputPath = "",
   repo = "",
   deposit = 0,
-  waveletUrl = DEFAULT_HOST,
-  privateKey = DEFAULT_PRIVATE_KEY,
-  envVarName = ""
+  envVarName = "CONTRACT_ID",
+  logHandle,
+  isRemote =  false
 ) => {
+  const contractsRoot = isRemote ? "contracts": ".";
+  const log = (...args) => {
+    console.log(...args);
+    if (logHandle) {
+      logHandle(...args);
+    }
+  }
   if (!cargoPath) {
     throw new Error("You must specify a path to smart contract project");
   }
-  const client = new Wavelet(waveletUrl);
-  const wallet = Wavelet.loadWalletFromPrivateKey(privateKey);
+  const client = new Wavelet(DEFAULT_HOST);
+  const wallet = Wavelet.loadWalletFromPrivateKey(DEFAULT_PRIVATE_KEY);
   let codeChanged = false;
 
   const repoSufix = repo.replace(/.*\//, "");
   const [repoRoot, branch = "master"] = repoSufix.split("#");
-  cargoPath = path.resolve("contracts", repoRoot, cargoPath);
+  cargoPath = path.resolve(contractsRoot, repoRoot, cargoPath);
 
   if (repo) {
-    codeChanged = await cloneRepo(repo, repoRoot, branch);
+    codeChanged = await cloneRepo(repo, repoRoot, branch, log);
   }
 
-  console.log("Code Changed?", codeChanged);
-  const artifactPath = path.resolve("contracts", repoRoot, "contractId");
+  log("Code Changed?", codeChanged);
+  const artifactPath = path.resolve(contractsRoot, repoRoot, "contractId");
 
   try {
     const deployedId = await readFile(artifactPath, "utf-8");
     if (deployedId) {
       const { id } = await client.getTransaction(deployedId);
-      console.log("Contract already deployed under", id);
+      log("Contract already deployed under", id);
       return id;
     }
   } catch (_) {}
 
-  const contractCode = await build(cargoPath);
+  const contractCode = await build(contractsRoot, cargoPath, log);
 
   const { id } = await client.deployContract(
     wallet,
@@ -117,15 +119,17 @@ const deploy = async (
     100000000,
     deposit
   );
-  console.log("Waiting for contract");
+  log("Waiting for contract");
   await waitForDeploy(client, id);
-  console.log("Contract ID: \n", id);
+  log("Contract ID: \n", id);
 
   if (outputPath) {
     write(outputPath, id, envVarName);
   }
 
-  writeFile(artifactPath, id);
+  if (isRemote) {
+    writeFile(artifactPath, id);
+  }
 
   return id;
 };
@@ -156,7 +160,7 @@ const write = async (outputPath, contractId, envVarName = "CONTRACT_ID") => {
   }
 
   await writeFile(outputPath, `${envVarName}=${contractId}`);
-  console.log("Wrote to ", outputPath);
+  log("Wrote to ", outputPath);
 };
 module.exports = {
   deploy,

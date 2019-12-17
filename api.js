@@ -14,10 +14,13 @@ module.exports = (...args) => {
 
   io.on("connection", socket => {
     console.log("new connection");
+    const logHandler = (...args) => {
+      socket.emit("log", args);
+    };
     socket.on("deploy-contract", async body => {
       console.log("deploy-contract", body);
 
-      const contractId = await deploy(body.cargoPath, null, body.repo, body.deposit);
+      const contractId = await deploy(null, body.repo, body.deposit, body.envVarName, logHandler, true);
       socket.emit("deployed-contract", {
         result: contractId,
       });

@@ -24,9 +24,11 @@ const postDeploy = (contractId, waveletApiUrl) => {
     const env = {
       ...process.env,
       [envVarName]: contractId,
+      ["REACT_APP_" + envVarName]: contractId,
       WAVELET_API_URL: process.env.WAVELET_API_URL || waveletApiUrl,
+      REACT_APP_WAVELET_API_URL: process.env.WAVELET_API_URL || waveletApiUrl,
     };
-    console.log("env", env);
+    
     const postDeployProcess = exec(argv.postDeploy, {
       env,
     });
